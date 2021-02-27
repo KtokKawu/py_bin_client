@@ -1,0 +1,22 @@
+== テスト送信用HTTPSサーバの準備
+
+. https_server.pyの設定を確認
+.. 自環境で空いているポートを「port」に設定
+.. サーバ証明書等に不備がある場合、 +
+link:http://slproweb.com/products/Win32OpenSSL.html[OpenSSL]を用いた下記コマンド等で証明書と秘密鍵を生成し、 +
+「httpd.socket」の「keyfile」と「certfile」に設定
+.. 「ssl._create_default_https_context」の行のコメントアウトを外す
+. 下記コマンドで生成したserver.crtとserver.keyを本ディレクトリに配置
++
+[source,cmd]
+----
+openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout server.key -out server.crt -subj "/CN=example.com" -days 3650
+----
++
+. 下記コマンドを実行してHTTPリクエストを待ち受ける
++
+[source,cmd]
+----
+python https_server.py
+----
+

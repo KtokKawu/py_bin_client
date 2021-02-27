@@ -1,0 +1,69 @@
+//====================
+// Document Settings
+//====================
+:sectnums:
+:toc:
+
+= GZIPバイナリコンテンツ向けクライアントツール
+
+HTTPリクエストボディにGZIPで圧縮されたバイナリデータを生で載せて送信するクライアントツール。
+
+== 内容
+
+|===
+|ファイル名|説明
+
+|bin_client.py
+|バイナリデータをHTTPリクエストボディに載せて送信するツール。
+
+|server/https_server.py
+|bin_client.pyのテスト用HTTPSサーバ。
+
+|json/http_headers.json
+|bin_client.pyが生成するHTTPリクエストのヘッダを定義するファイル。
+
+|json/params.json
+|bin_client.pyが送信するバイナリデータを定義するファイル。 +
+JSONキーごとの配列にデータ型、データのバイト数、データ内容を定義する必要がある。
+
+|json/settings.json
+|bin_client.pyの諸設定を定義するファイル。 +
+テスト対象URL、プロキシ設定、バイトオーダーを設定可能。
+
+|===
+
+=== 準備・本ツールの使用方法
+
+プロキシツールを挟むことで、正しく送信されているか確認しながらバイナリを楽しむ。
+
+. Burp Suiteを起動
+. bin_client.pyの設定を確認
+.. テスト対象の「url」を指定する
+.. 「PROXIES」にBurp Suiteのドメインとポートを設定する
+.. 「setup_proxy()」の行のコメントアウトを外す
+.. テスト用の自己署名証明書エラーを無視するため、 +
+「ssl._create_default_https_context」の行をコメントアウトする
+. headers.jsonにカスタムヘッダとその値を追加
+. params.jsonに送信したいデータと、そのバイト長を追加
+. 下記コマンドを実行
++
+[source,cmd]
+----
+python bin_client.py
+----
+
+=== 動作確認の結果
+
+== 仕様
+
+* http/httpsで送信可能。
+* HTTPメソッドはデフォルトPOST。 +
+->create_request()関数のreq変数に格納する値を修正すれば変更可能です。
+* Burp Suite CE v2020.8、v2020.12.1(両方exe版)にて、キャプチャできることを確認。 +
+->v2020.8の方が、デフォルトでレスポンスとそのバイナリ(Hex)を同時に確認できる。
+* JSONデータをutf-8で読込み、utf-8でバイナリデータを生成する。
+* 送信するバイナリデータのバイトオーダーはparams.jsonのキーの順序に依存する。 +
+big endianならjsonのままの順序、little endianは逆の順序となる。 +
+当該jsonの配列値を全て結合後にバイナリデータ全体のバイトオーダーを変えるため、 +
+jsonのキー(パラメータ)ごとのバイトオーダーは変えない。
+* 諸事情でCRC-16(CRC-16-CCITT)の計算をすることがあったので、crc16()も用意している。
